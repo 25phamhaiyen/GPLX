@@ -1,0 +1,180 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model HoiDongSatHach {
+  MaHoiDong       Int            @id(map: "PK__HoiDongS__998808B3893A869E") @default(autoincrement())
+  TenHoiDong      String         @db.NVarChar(200)
+  ChuTichHoiDong  String         @db.NVarChar(100)
+  ThanhVien       String?        @db.NVarChar(500)
+  NgayThanhLap    DateTime?      @db.Date
+  TrangThai       String?        @default("N'Hoạt động'", map: "DF__HoiDongSa__Trang__2A164134") @db.NVarChar(20)
+  DuyetCapGPLX    DuyetCapGPLX[]
+}
+
+model DuyetCapGPLX {
+  MaDuyet        Int             @id(map: "PK__DuyetCap__34A9E4894E3E030B") @default(autoincrement())
+  MaThongTinThi  Int             @unique(map: "UQ__DuyetCap__071809421423BEE2")
+  MaHoiDong      Int
+  NgayNop        DateTime        @default(now(), map: "DF__DuyetCapG__NgayN__14270015") @db.DateTime
+  NgayDuyet      DateTime?       @db.DateTime
+  TrangThaiDuyet String          @default("N'Chờ duyệt'", map: "DF__DuyetCapG__Trang__151B244E") @db.NVarChar(30)
+  LyDoTuChoi     String?         @db.NVarChar(500)
+  NguoiDuyet     String?         @db.NVarChar(100)
+  GhiChu         String?         @db.NVarChar(500)
+  HoiDongSatHach HoiDongSatHach  @relation(fields: [MaHoiDong], references: [MaHoiDong], map: "FK__DuyetCapG__MaHoi__32AB8735")
+  ThongTinThi    ThongTinThi     @relation(fields: [MaThongTinThi], references: [MaThongTinThi], map: "FK__DuyetCapG__MaTho__17036CC0")
+  GPLX           GPLX?
+}
+
+model GiangVien {
+  MaGiangVien       Int                 @id(map: "PK__GiangVie__C03BEEBAE15D1EFE") @default(autoincrement())
+  HoTen             String              @db.NVarChar(100)
+  SoDienThoai       String?             @db.VarChar(15)
+  Email             String?             @unique(map: "UQ__GiangVie__A9D10534D98C467D") @db.NVarChar(100)
+  TrangThai         String?             @default("N'Hoạt động'", map: "DF__GiangVien__Trang__6477ECF3") @db.NVarChar(30)
+  GhiChu            String?             @db.NVarChar(500)
+  GiangVien_KhoaHoc GiangVien_KhoaHoc[]
+}
+
+model GiangVien_KhoaHoc {
+  MaGiangVien  Int
+  MaKhoaHoc    Int
+  GhiChu       String?   @db.NVarChar(500)
+  NgayPhanCong DateTime? @default(now(), map: "DF__GiangVien__NgayP__71D1E811") @db.Date
+  TrangThai    String?   @default("N'Đang dạy'", map: "DF__GiangVien__Trang__72C60C4A") @db.NVarChar(20)
+  GiangVien    GiangVien @relation(fields: [MaGiangVien], references: [MaGiangVien], onDelete: Cascade, map: "FK__GiangVien__MaGia__74AE54BC")
+  KhoaHoc      KhoaHoc   @relation(fields: [MaKhoaHoc], references: [MaKhoaHoc], onDelete: Cascade, map: "FK__GiangVien__MaKho__75A278F5")
+
+  @@id([MaGiangVien, MaKhoaHoc], map: "PK_GiangVien_KhoaHoc")
+}
+
+model GPLX {
+  SoGPLX       String       @id(map: "PK__GPLX__DB93E0138A77CFD4") @db.VarChar(20)
+  MaHocVien    Int
+  MaDuyet      Int          @unique(map: "UQ__GPLX__34A9E488248A3070")
+  MaLoaiBang   Int
+  NgayCap      DateTime     @default(dbgenerated("CONVERT([date],getdate())"), map: "DF__GPLX__NgayCap__1BC821DD") @db.Date
+  NgayHetHan   DateTime     @db.Date
+  NoiCap       String       @default("N'Sở Giao thông Vận tải'", map: "DF__GPLX__NoiCap__1CBC4616") @db.NVarChar(200)
+  TrangThai    String?      @default("N'Đang sử dụng'", map: "DF__GPLX__TrangThai__1DB06A4F") @db.NVarChar(30)
+  GhiChu       String?      @db.NVarChar(500)
+  DuyetCapGPLX DuyetCapGPLX @relation(fields: [MaDuyet], references: [MaDuyet], onUpdate: NoAction, map: "FK__GPLX__MaDuyet__208CD6FA")
+  HocVien      HocVien      @relation(fields: [MaHocVien], references: [MaHocVien], map: "FK__GPLX__MaHocVien__1F98B2C1")
+  LoaiBangLai  LoaiBangLai  @relation(fields: [MaLoaiBang], references: [MaLoaiBang], map: "FK__GPLX__MaLoaiBang__2180FB33")
+}
+
+model HocVien {
+  MaHocVien   Int          @id(map: "PK__HocVien__685B0E6A5C47FC4F") @default(autoincrement())
+  TenDangNhap String       @unique(map: "UQ__HocVien__55F68FC0B91FEF7A") @db.NVarChar(50)
+  MatKhau     String       @db.NVarChar(255)
+  HoTen       String       @db.NVarChar(100)
+  NgaySinh    DateTime     @db.Date
+  GioiTinh    String?      @db.NVarChar(10)
+  CCCD        String?      @unique(map: "UQ__HocVien__A955A0AACF74A2C2") @db.Char(12)
+  SoDienThoai String       @db.VarChar(15)
+  Email       String       @unique(map: "UQ__HocVien__A9D105348736DA01") @db.NVarChar(100)
+  DiaChi      String?      @db.NVarChar(255)
+  NgayTao     DateTime?    @default(now(), map: "DF__HocVien__NgayTao__5EBF139D") @db.DateTime
+  GPLX        GPLX[]
+  HoSoDangKy  HoSoDangKy[]
+}
+
+model HoSoDangKy {
+  MaHoSo             Int           @id(map: "PK__HoSoDang__1666423C1C12CF28") @default(autoincrement())
+  MaHocVien          Int
+  MaLoaiBang         Int
+  MaKhoaHoc          Int
+  NgayDangKy         DateTime?     @default(now(), map: "DF__HoSoDangK__NgayD__02084FDA") @db.DateTime
+  TinhTrangSucKhoe   String?       @default("N'Khỏe mạnh'", map: "DF__HoSoDangK__TinhT__02FC7413") @db.NVarChar(50)
+  NgayKhamSucKhoe    DateTime?     @db.Date
+  GiayKhamSucKhoe    String?       @db.VarChar(50)
+  Anh3x4             String?       @db.NVarChar(255)
+  ThoiGianThiDuKien  DateTime?     @db.Date
+  TongHocPhi         Decimal?      @db.Decimal(15, 2)
+  TrangThaiThanhToan String?       @default("N'Chưa thanh toán'", map: "DF__HoSoDangK__Trang__04E4BC85") @db.NVarChar(30)
+  NgayThanhToan      DateTime?     @db.DateTime
+  TrangThaiHoSo      String?       @default("N'Chờ duyệt'", map: "DF__HoSoDangK__Trang__06CD04F7") @db.NVarChar(30)
+  NgayDuyet          DateTime?     @db.DateTime
+  GhiChu             String?       @db.NVarChar(500)
+  HocVien            HocVien       @relation(fields: [MaHocVien], references: [MaHocVien], onUpdate: NoAction, map: "FK__HoSoDangK__MaHoc__08B54D69")
+  KhoaHoc            KhoaHoc       @relation(fields: [MaKhoaHoc], references: [MaKhoaHoc], onUpdate: NoAction, map: "FK__HoSoDangK__MaKho__0A9D95DB")
+  LoaiBangLai        LoaiBangLai   @relation(fields: [MaLoaiBang], references: [MaLoaiBang], onUpdate: NoAction, map: "FK__HoSoDangK__MaLoa__09A971A2")
+  ThongTinThi        ThongTinThi[]
+}
+
+model KhoaHoc {
+  MaKhoaHoc           Int                 @id(map: "PK__KhoaHoc__48F0FF98F36C9E7E") @default(autoincrement())
+  TenKhoaHoc          String              @db.NVarChar(200)
+  MaLoaiBang          Int
+  NgayBatDau          DateTime            @db.Date
+  NgayKetThuc         DateTime            @db.Date
+  SoLuongHocVienToiDa Int
+  SoLuongDaDangKy     Int                 @default(0, map: "DF__KhoaHoc__SoLuong__693CA210")
+  TrangThai           String              @default("N'Sắp mở'", map: "DF__KhoaHoc__TrangTh__6B24EA82") @db.NVarChar(20)
+  GhiChu              String?             @db.NVarChar(500)
+  GiangVien_KhoaHoc   GiangVien_KhoaHoc[]
+  HoSoDangKy          HoSoDangKy[]
+  LoaiBangLai         LoaiBangLai         @relation(fields: [MaLoaiBang], references: [MaLoaiBang], map: "FK__KhoaHoc__MaLoaiB__6D0D32F4")
+  LichHoc             LichHoc[]
+  LichThi             LichThi[]
+}
+
+model LichHoc {
+  MaLichHoc  Int      @id(map: "PK__LichHoc__150EBC214D603FD6") @default(autoincrement())
+  MaKhoaHoc  Int
+  Thu        Int
+  GioBatDau  DateTime @db.Time
+  GioKetThuc DateTime @db.Time
+  GhiChu     String?  @db.NVarChar(500)
+  KhoaHoc    KhoaHoc  @relation(fields: [MaKhoaHoc], references: [MaKhoaHoc], onDelete: Cascade, map: "FK__LichHoc__MaKhoaH__7A672E12")
+}
+
+model LichThi {
+  MaLichThi   Int           @id(map: "PK__LichThi__147EF5CC366AA143") @default(autoincrement())
+  MaKhoaHoc   Int
+  NgayThi     DateTime      @db.Date
+  Thu         Int
+  GioBatDau   DateTime      @db.Time
+  GioKetThuc  DateTime      @db.Time
+  DiaDiem     String?       @db.NVarChar(200)
+  GhiChu      String?       @db.NVarChar(500)
+  KhoaHoc     KhoaHoc       @relation(fields: [MaKhoaHoc], references: [MaKhoaHoc], onDelete: Cascade, map: "FK__LichThi__MaKhoaH__7F2BE32F")
+  ThongTinThi ThongTinThi[]
+}
+
+model LoaiBangLai {
+  MaLoaiBang            Int          @id(map: "PK__LoaiBang__36B01BB3B1382E81") @default(autoincrement())
+  TenLoaiBang           String       @unique(map: "UQ__LoaiBang__37356BB73AA4D3C6") @db.NVarChar(10)
+  MoTa                  String?      @db.NVarChar(500)
+  PhiThi                Decimal      @db.Decimal(15, 2)
+  SoGioLyThuyet         Int
+  SoGioThucHanh         Int
+  ThoiGianThiSauKhoaHoc Int
+  DiemDatLyThuyet       Int
+  DiemDatThucHanh       Int
+  ThoiHanGPLX           Int          @default(10, map: "DF__LoaiBangL__ThoiH__5165187F")
+  TrangThai             String       @default("N'Hoạt động'", map: "DF__LoaiBangL__Trang__534D60F1") @db.NVarChar(20)
+  GPLX                  GPLX[]
+  HoSoDangKy            HoSoDangKy[]
+  KhoaHoc               KhoaHoc[]
+}
+
+model ThongTinThi {
+  MaThongTinThi  Int           @id(map: "PK__ThongTin__0718094399A413A2") @default(autoincrement())
+  MaHoSo         Int
+  MaLichThi      Int
+  DiemLyThuyet   Decimal?      @db.Decimal(5, 2)
+  DiemThucHanh   Decimal?      @db.Decimal(5, 2)
+  GhiChuLyThuyet String?       @db.NVarChar(500)
+  GhiChuThucHanh String?       @db.NVarChar(500)
+  NgayNhapDiem   DateTime?     @db.DateTime
+  DuyetCapGPLX   DuyetCapGPLX?
+  HoSoDangKy     HoSoDangKy    @relation(fields: [MaHoSo], references: [MaHoSo], onDelete: Cascade, map: "FK__ThongTinT__MaHoS__0F624AF8")
+  LichThi        LichThi       @relation(fields: [MaLichThi], references: [MaLichThi], onDelete: Cascade, map: "FK__ThongTinT__MaLic__10566F31")
+}

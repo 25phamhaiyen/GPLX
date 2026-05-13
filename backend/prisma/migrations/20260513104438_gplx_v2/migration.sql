@@ -1,0 +1,249 @@
+BEGIN TRY
+
+BEGIN TRAN;
+
+-- CreateTable
+CREATE TABLE [dbo].[DuyetCapGPLX] (
+    [MaDuyet] INT NOT NULL IDENTITY(1,1),
+    [MaThongTinThi] INT NOT NULL,
+    [MaHoiDong] INT NOT NULL,
+    [NgayNop] DATETIME NOT NULL CONSTRAINT [DF__DuyetCapG__NgayN__2EDAF651] DEFAULT CURRENT_TIMESTAMP,
+    [NgayDuyet] DATETIME,
+    [TrangThaiDuyet] NVARCHAR(30) NOT NULL CONSTRAINT [DF__DuyetCapG__Trang__2FCF1A8A] DEFAULT 'N''Chờ duyệt''',
+    [LyDoTuChoi] NVARCHAR(500),
+    [NguoiDuyet] NVARCHAR(100),
+    [GhiChu] NVARCHAR(500),
+    CONSTRAINT [PK__DuyetCap__34A9E489935996F7] PRIMARY KEY CLUSTERED ([MaDuyet]),
+    CONSTRAINT [UQ__DuyetCap__07180942C904CBF8] UNIQUE NONCLUSTERED ([MaThongTinThi])
+);
+
+-- CreateTable
+CREATE TABLE [dbo].[GiamThi] (
+    [MaGiamThi] INT NOT NULL IDENTITY(1,1),
+    [HoTen] NVARCHAR(100) NOT NULL,
+    [CCCD] CHAR(12) NOT NULL,
+    [SoDienThoai] VARCHAR(15) NOT NULL,
+    [Email] NVARCHAR(100) NOT NULL,
+    [ChuyenMon] NVARCHAR(30) CONSTRAINT [DF__GiamThi__ChuyenM__0C85DE4D] DEFAULT 'N''Cả hai''',
+    [TrangThai] NVARCHAR(20) NOT NULL CONSTRAINT [DF__GiamThi__TrangTh__0E6E26BF] DEFAULT 'N''Hoạt động''',
+    CONSTRAINT [PK__GiamThi__ED0B6DE03EB9DC16] PRIMARY KEY CLUSTERED ([MaGiamThi]),
+    CONSTRAINT [UQ__GiamThi__A955A0AA1F13496F] UNIQUE NONCLUSTERED ([CCCD]),
+    CONSTRAINT [UQ__GiamThi__A9D1053486DEA28B] UNIQUE NONCLUSTERED ([Email])
+);
+
+-- CreateTable
+CREATE TABLE [dbo].[GPLX] (
+    [SoGPLX] VARCHAR(20) NOT NULL,
+    [MaHocVien] INT NOT NULL,
+    [MaDuyet] INT NOT NULL,
+    [MaLoaiBang] INT NOT NULL,
+    [NgayCap] DATE NOT NULL CONSTRAINT [DF__GPLX__NgayCap__37703C52] DEFAULT CONVERT([date],getdate()),
+    [NgayHetHan] DATE NOT NULL,
+    [NoiCap] NVARCHAR(200) NOT NULL CONSTRAINT [DF__GPLX__NoiCap__3864608B] DEFAULT 'N''Sở Giao thông Vận tải''',
+    [TrangThai] NVARCHAR(30) CONSTRAINT [DF__GPLX__TrangThai__395884C4] DEFAULT 'N''Đang sử dụng''',
+    [GhiChu] NVARCHAR(500),
+    CONSTRAINT [PK__GPLX__DB93E013C826656D] PRIMARY KEY CLUSTERED ([SoGPLX]),
+    CONSTRAINT [UQ__GPLX__34A9E488542E2444] UNIQUE NONCLUSTERED ([MaDuyet])
+);
+
+-- CreateTable
+CREATE TABLE [dbo].[HocVien] (
+    [MaHocVien] INT NOT NULL IDENTITY(1,1),
+    [TenDangNhap] NVARCHAR(50) NOT NULL,
+    [MatKhau] NVARCHAR(255) NOT NULL,
+    [HoTen] NVARCHAR(100) NOT NULL,
+    [NgaySinh] DATE NOT NULL,
+    [GioiTinh] NVARCHAR(10),
+    [CCCD] CHAR(12),
+    [SoDienThoai] VARCHAR(15) NOT NULL,
+    [Email] NVARCHAR(100) NOT NULL,
+    [DiaChi] NVARCHAR(255),
+    [NgayTao] DATETIME CONSTRAINT [DF__HocVien__NgayTao__52593CB8] DEFAULT CURRENT_TIMESTAMP,
+    [TrangThai] NVARCHAR(30) CONSTRAINT [DF__HocVien__TrangTh__534D60F1] DEFAULT 'N''Hoạt động''',
+    [Role] NVARCHAR(20) NOT NULL CONSTRAINT [HocVien_Role_df] DEFAULT 'HOCVIEN',
+    CONSTRAINT [PK__HocVien__685B0E6AEB26D022] PRIMARY KEY CLUSTERED ([MaHocVien]),
+    CONSTRAINT [UQ__HocVien__55F68FC0429D64C1] UNIQUE NONCLUSTERED ([TenDangNhap]),
+    CONSTRAINT [UQ__HocVien__A955A0AA6A7AC810] UNIQUE NONCLUSTERED ([CCCD]),
+    CONSTRAINT [UQ__HocVien__A9D10534A17E1948] UNIQUE NONCLUSTERED ([Email])
+);
+
+-- CreateTable
+CREATE TABLE [dbo].[HoiDongSatHach] (
+    [MaHoiDong] INT NOT NULL IDENTITY(1,1),
+    [TenHoiDong] NVARCHAR(200) NOT NULL,
+    [ChuTichHoiDong] NVARCHAR(100) NOT NULL,
+    [ThanhVien] NVARCHAR(500),
+    [NgayThanhLap] DATE,
+    [TrangThai] NVARCHAR(20) CONSTRAINT [DF__HoiDongSa__Trang__2A164134] DEFAULT 'N''Hoạt động''',
+    CONSTRAINT [PK__HoiDongS__998808B3893A869E] PRIMARY KEY CLUSTERED ([MaHoiDong])
+);
+
+-- CreateTable
+CREATE TABLE [dbo].[HoSoDangKy] (
+    [MaHoSo] INT NOT NULL IDENTITY(1,1),
+    [MaHocVien] INT NOT NULL,
+    [MaLoaiBang] INT NOT NULL,
+    [MaKhoaHoc] INT NOT NULL,
+    [NgayDangKy] DATETIME CONSTRAINT [DF__HoSoDangK__NgayD__6E01572D] DEFAULT CURRENT_TIMESTAMP,
+    [GiayKhamSucKhoe] NVARCHAR(255),
+    [NgayKhamSucKhoe] DATE,
+    [ThoiGianHocDuKien] DATE NOT NULL,
+    [ThoiGianThiDuKien] DATE,
+    [TongHocPhi] DECIMAL(15,2),
+    [DaThanhToan] DECIMAL(15,2) CONSTRAINT [DF__HoSoDangK__DaTha__6FE99F9F] DEFAULT 0,
+    [TrangThaiThanhToan] NVARCHAR(30) CONSTRAINT [DF__HoSoDangK__Trang__71D1E811] DEFAULT 'N''Chưa thanh toán''',
+    [NgayThanhToan] DATETIME,
+    [TrangThaiHoSo] NVARCHAR(30) CONSTRAINT [DF__HoSoDangK__Trang__73BA3083] DEFAULT 'N''Chờ duyệt''',
+    [NgayDuyet] DATETIME,
+    [LyDoTuChoi] NVARCHAR(500),
+    [GhiChu] NVARCHAR(500),
+    CONSTRAINT [PK__HoSoDang__1666423C389B95E8] PRIMARY KEY CLUSTERED ([MaHoSo])
+);
+
+-- CreateTable
+CREATE TABLE [dbo].[KhoaHoc] (
+    [MaKhoaHoc] INT NOT NULL IDENTITY(1,1),
+    [TenKhoaHoc] NVARCHAR(200) NOT NULL,
+    [MaLoaiBang] INT NOT NULL,
+    [NgayBatDau] DATE NOT NULL,
+    [NgayKetThuc] DATE NOT NULL,
+    [SoLuongHocVienToiDa] INT NOT NULL,
+    [SoLuongDaDangKy] INT NOT NULL CONSTRAINT [DF__KhoaHoc__SoLuong__656C112C] DEFAULT 0,
+    [TrangThai] NVARCHAR(20) NOT NULL CONSTRAINT [DF__KhoaHoc__TrangTh__6754599E] DEFAULT 'N''Sắp mở''',
+    [GhiChu] NVARCHAR(500),
+    CONSTRAINT [PK__KhoaHoc__48F0FF983CCE0E63] PRIMARY KEY CLUSTERED ([MaKhoaHoc])
+);
+
+-- CreateTable
+CREATE TABLE [dbo].[KyThi] (
+    [MaKyThi] INT NOT NULL IDENTITY(1,1),
+    [TenKyThi] NVARCHAR(200) NOT NULL,
+    [MaLoaiBang] INT NOT NULL,
+    [MaKhoaHoc] INT NOT NULL,
+    [NgayThi] DATE NOT NULL,
+    [DiaDiemThi] NVARCHAR(300),
+    [SoLuongThiSinhToiDa] INT,
+    [SoLuongDaDangKy] INT CONSTRAINT [DF__KyThi__SoLuongDa__7F2BE32F] DEFAULT 0,
+    [TrangThai] NVARCHAR(20) CONSTRAINT [DF__KyThi__TrangThai__01142BA1] DEFAULT 'N''Sắp thi''',
+    [GhiChu] NVARCHAR(500),
+    CONSTRAINT [PK__KyThi__1403DE985651DF96] PRIMARY KEY CLUSTERED ([MaKyThi])
+);
+
+-- CreateTable
+CREATE TABLE [dbo].[LoaiBangLai] (
+    [MaLoaiBang] INT NOT NULL IDENTITY(1,1),
+    [TenLoaiBang] NVARCHAR(10) NOT NULL,
+    [MoTa] NVARCHAR(500),
+    [PhiThi] DECIMAL(15,2) NOT NULL,
+    [PhiThiLai] DECIMAL(15,2) NOT NULL,
+    [SoGioLyThuyet] INT NOT NULL,
+    [SoGioThucHanh] INT NOT NULL,
+    [ThoiGianThiSauKhoaHoc] INT NOT NULL,
+    [DiemDatLyThuyet] DECIMAL(4,2) NOT NULL,
+    [DiemDatThucHanh] DECIMAL(4,2) NOT NULL,
+    [ThoiHanGPLX] INT NOT NULL CONSTRAINT [DF__LoaiBangL__ThoiH__5EBF139D] DEFAULT 10,
+    [TrangThai] NVARCHAR(20) NOT NULL CONSTRAINT [DF__LoaiBangL__Trang__60A75C0F] DEFAULT 'N''Hoạt động''',
+    CONSTRAINT [PK__LoaiBang__36B01BB31162B428] PRIMARY KEY CLUSTERED ([MaLoaiBang]),
+    CONSTRAINT [UQ__LoaiBang__37356BB7D094D8FB] UNIQUE NONCLUSTERED ([TenLoaiBang])
+);
+
+-- CreateTable
+CREATE TABLE [dbo].[LichHoc] (
+    [MaLichHoc] INT NOT NULL IDENTITY(1,1),
+    [MaKhoaHoc] INT NOT NULL,
+    [MaGiangVien] INT NOT NULL,
+    [NgayHoc] DATE NOT NULL,
+    [ThoiGian] NVARCHAR(50) NOT NULL,
+    [NoiHoc] NVARCHAR(200) NOT NULL,
+    [TrangThai] NVARCHAR(20) NOT NULL CONSTRAINT [LichHoc_TrangThai_df] DEFAULT 'S?p t?i',
+    CONSTRAINT [LichHoc_pkey] PRIMARY KEY CLUSTERED ([MaLichHoc])
+);
+
+-- CreateTable
+CREATE TABLE [dbo].[ThongTinThi] (
+    [MaThongTinThi] INT NOT NULL IDENTITY(1,1),
+    [MaHoSo] INT NOT NULL,
+    [MaHocVien] INT NOT NULL,
+    [MaKyThi] INT NOT NULL,
+    [MaGiamThi] INT,
+    [LoaiThi] NVARCHAR(20) NOT NULL CONSTRAINT [DF__ThongTinT__LoaiT__123EB7A3] DEFAULT 'N''Lần đầu''',
+    [LanThi] INT NOT NULL CONSTRAINT [DF__ThongTinT__LanTh__14270015] DEFAULT 1,
+    [PhiThiLai] DECIMAL(15,2) CONSTRAINT [DF__ThongTinT__PhiTh__160F4887] DEFAULT 0,
+    [DaThanhToanPhiThi] BIT CONSTRAINT [DF__ThongTinT__DaTha__17F790F9] DEFAULT 0,
+    [NgayThi] DATETIME,
+    [DiemLyThuyet] DECIMAL(5,2),
+    [DiemThucHanh] DECIMAL(5,2),
+    [KetQuaLyThuyet] NVARCHAR(20) CONSTRAINT [DF__ThongTinT__KetQu__1AD3FDA4] DEFAULT 'N''Chưa thi''',
+    [KetQuaThucHanh] NVARCHAR(20) CONSTRAINT [DF__ThongTinT__KetQu__1CBC4616] DEFAULT 'N''Chưa thi''',
+    [KetQuaTong] NVARCHAR(20) CONSTRAINT [DF__ThongTinT__KetQu__1EA48E88] DEFAULT 'N''Chưa thi''',
+    [TongDiem] DECIMAL(5,2),
+    [XepLoai] NVARCHAR(30),
+    [GhiChuLyThuyet] NVARCHAR(500),
+    [GhiChuThucHanh] NVARCHAR(500),
+    [NgayNhapDiem] DATETIME,
+    CONSTRAINT [PK__ThongTin__071809430CF9BB0C] PRIMARY KEY CLUSTERED ([MaThongTinThi])
+);
+
+-- AddForeignKey
+ALTER TABLE [dbo].[DuyetCapGPLX] ADD CONSTRAINT [FK__DuyetCapG__MaHoi__32AB8735] FOREIGN KEY ([MaHoiDong]) REFERENCES [dbo].[HoiDongSatHach]([MaHoiDong]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[DuyetCapGPLX] ADD CONSTRAINT [FK__DuyetCapG__MaTho__31B762FC] FOREIGN KEY ([MaThongTinThi]) REFERENCES [dbo].[ThongTinThi]([MaThongTinThi]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[GPLX] ADD CONSTRAINT [FK__GPLX__MaDuyet__3C34F16F] FOREIGN KEY ([MaDuyet]) REFERENCES [dbo].[DuyetCapGPLX]([MaDuyet]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[GPLX] ADD CONSTRAINT [FK__GPLX__MaHocVien__3B40CD36] FOREIGN KEY ([MaHocVien]) REFERENCES [dbo].[HocVien]([MaHocVien]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[GPLX] ADD CONSTRAINT [FK__GPLX__MaLoaiBang__3D2915A8] FOREIGN KEY ([MaLoaiBang]) REFERENCES [dbo].[LoaiBangLai]([MaLoaiBang]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[HoSoDangKy] ADD CONSTRAINT [FK__HoSoDangK__MaHoc__75A278F5] FOREIGN KEY ([MaHocVien]) REFERENCES [dbo].[HocVien]([MaHocVien]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[HoSoDangKy] ADD CONSTRAINT [FK__HoSoDangK__MaKho__778AC167] FOREIGN KEY ([MaKhoaHoc]) REFERENCES [dbo].[KhoaHoc]([MaKhoaHoc]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[HoSoDangKy] ADD CONSTRAINT [FK__HoSoDangK__MaLoa__76969D2E] FOREIGN KEY ([MaLoaiBang]) REFERENCES [dbo].[LoaiBangLai]([MaLoaiBang]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[KhoaHoc] ADD CONSTRAINT [FK__KhoaHoc__MaLoaiB__693CA210] FOREIGN KEY ([MaLoaiBang]) REFERENCES [dbo].[LoaiBangLai]([MaLoaiBang]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[KyThi] ADD CONSTRAINT [FK__KyThi__MaKhoaHoc__03F0984C] FOREIGN KEY ([MaKhoaHoc]) REFERENCES [dbo].[KhoaHoc]([MaKhoaHoc]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[KyThi] ADD CONSTRAINT [FK__KyThi__MaLoaiBan__02FC7413] FOREIGN KEY ([MaLoaiBang]) REFERENCES [dbo].[LoaiBangLai]([MaLoaiBang]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[LichHoc] ADD CONSTRAINT [LichHoc_MaGiangVien_fkey] FOREIGN KEY ([MaGiangVien]) REFERENCES [dbo].[HocVien]([MaHocVien]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[LichHoc] ADD CONSTRAINT [LichHoc_MaKhoaHoc_fkey] FOREIGN KEY ([MaKhoaHoc]) REFERENCES [dbo].[KhoaHoc]([MaKhoaHoc]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[ThongTinThi] ADD CONSTRAINT [FK__ThongTinT__MaGia__25518C17] FOREIGN KEY ([MaGiamThi]) REFERENCES [dbo].[GiamThi]([MaGiamThi]) ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[ThongTinThi] ADD CONSTRAINT [FK__ThongTinT__MaHoc__236943A5] FOREIGN KEY ([MaHocVien]) REFERENCES [dbo].[HocVien]([MaHocVien]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[ThongTinThi] ADD CONSTRAINT [FK__ThongTinT__MaHoS__22751F6C] FOREIGN KEY ([MaHoSo]) REFERENCES [dbo].[HoSoDangKy]([MaHoSo]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[ThongTinThi] ADD CONSTRAINT [FK__ThongTinT__MaKyT__245D67DE] FOREIGN KEY ([MaKyThi]) REFERENCES [dbo].[KyThi]([MaKyThi]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+COMMIT TRAN;
+
+END TRY
+BEGIN CATCH
+
+IF @@TRANCOUNT > 0
+BEGIN
+    ROLLBACK TRAN;
+END;
+THROW
+
+END CATCH
