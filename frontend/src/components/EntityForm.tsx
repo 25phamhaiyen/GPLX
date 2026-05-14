@@ -19,11 +19,20 @@ interface Props {
   onSaved: () => void;
 }
 
+function getValue(obj: unknown, path: string): unknown {
+  return path.split(".").reduce<unknown>((acc, key) => {
+    if (acc && typeof acc === "object") return (acc as Record<string, unknown>)[key];
+    return undefined;
+  }, obj);
+}
+
 function buildSchema(fields: FieldDef[], userRole?: string) {
   const shape: Record<string, z.ZodTypeAny> = {};
   fields.forEach((f) => {
+    if (f.type === "display") return;
+
     // If field is hidden for this role, don't require it on frontend
-    const isHidden = userRole === "HOCVIEN" && f.name === "MaHocVien";
+    const isHidden = userRole === "HOCVIEN" && (f.name === "MaHocVien" || f.adminOnly);
     
     let s: z.ZodTypeAny;
     if (f.type === "number") {
@@ -41,7 +50,7 @@ function buildSchema(fields: FieldDef[], userRole?: string) {
       if (f.required && !isHidden) s = (s as z.ZodString).min(1, `${f.label} là bắt buộc`);
       else s = s.nullable().optional().or(z.literal(""));
     }
-    else if (f.type === "select") {
+    else if (f.type === "select" || f.type === "file") {
       const isNumeric = !!f.optionsFrom || (f.options && typeof f.options[0]?.value === "number");
       if (isNumeric) {
         s = (f.required && !isHidden) ? z.coerce.number().min(1, `${f.label} là bắt buộc`) : z.coerce.number().nullable().optional();
@@ -68,6 +77,7 @@ export function EntityForm({ entity, open, onClose, initial, onSaved }: Props) {
     resolver: zodResolver(schema),
   });
 
+  const [fileUrls, setFileUrls] = useState<Record<string, string>>({});
   const [options, setOptions] = useState<Record<string, Array<Record<string, unknown>>>>({});
   const watchMaLoaiBang = watch("MaLoaiBang");
   const watchMaKhoaHoc = watch("MaKhoaHoc");
@@ -78,11 +88,28 @@ export function EntityForm({ entity, open, onClose, initial, onSaved }: Props) {
 
   useEffect(() => {
     const selects = entity.fields.filter((f) => f.type === "select" && f.optionsFrom);
-    Promise.all(
+    Promise.allSettled(
       selects.map((f) =>
-        api.get(`/${f.optionsFrom}`, { params: { pageSize: 500 } }).then((r) => [f.name, r.data.data] as const)
+        api.get(`/${f.optionsFrom}`, { params: { pageSize: 500 } }).then((r) => {
+          let data = r.data.data;
+          if (f.optionsFrom === "hocvien") {
+            data = data.filter((h: any) => !String(h.TenDangNhap).toLowerCase().includes("admin"));
+          }
+          return [f.name, data] as const;
+        })
       )
-    ).then((rows) => setOptions(Object.fromEntries(rows)));
+    ).then((results) => {
+      const opts: Record<string, any[]> = {};
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+          const [name, data] = result.value;
+          opts[name] = data;
+        } else {
+          console.error(`Failed to load options for ${selects[index].name}:`, result.reason);
+        }
+      });
+      setOptions(opts);
+    });
   }, [entity.key]);
 
   // --- CORE AUTOMATION LOGIC ---
@@ -91,12 +118,8 @@ export function EntityForm({ entity, open, onClose, initial, onSaved }: Props) {
 
     // 1. HoSoDangKy: Auto-fill from License Type & Course
     if (entity.key === "hosodangky") {
-      if (watchMaLoaiBang) {
-        api.get(`/loaibanglai/${watchMaLoaiBang}`).then(r => setValue("TongHocPhi", Number(r.data.PhiThi)));
-      }
       if (watchMaKhoaHoc) {
         api.get(`/khoahoc/${watchMaKhoaHoc}`).then(r => {
-          if (r.data.NgayBatDau) setValue("ThoiGianHocDuKien", String(r.data.NgayBatDau).slice(0, 10));
           if (r.data.NgayKetThuc) {
             const examDate = new Date(r.data.NgayKetThuc);
             examDate.setDate(examDate.getDate() + (r.data.LoaiBangLai?.ThoiGianThiSauKhoaHoc || 7));
@@ -134,6 +157,10 @@ export function EntityForm({ entity, open, onClose, initial, onSaved }: Props) {
       entity.fields.forEach((f) => {
         const v = initial?.[f.name];
         if (f.type === "date" && v) data[f.name] = String(v).slice(0, 10);
+        else if (f.type === "file" && v) {
+          setFileUrls((prev) => ({ ...prev, [f.name]: String(v) }));
+          data[f.name] = v;
+        }
         else data[f.name] = v ?? "";
       });
       reset(data);
@@ -167,7 +194,7 @@ export function EntityForm({ entity, open, onClose, initial, onSaved }: Props) {
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {entity.fields.map((f) => {
-            if (user?.role === "HOCVIEN" && f.name === "MaHocVien") return null;
+            if (user?.role === "HOCVIEN" && (f.name === "MaHocVien" || f.adminOnly)) return null;
 
             let fieldOptions = options[f.name] || [];
             if (entity.key === "hosodangky" && f.name === "MaKhoaHoc" && watchMaLoaiBang) {
@@ -180,7 +207,11 @@ export function EntityForm({ entity, open, onClose, initial, onSaved }: Props) {
             return (
               <div key={f.name} className={`space-y-1.5 ${f.name === "GiayKhamSucKhoe" ? "sm:col-span-2" : ""}`}>
                 <Label>{f.label}{f.required && <span className="text-destructive"> *</span>}</Label>
-                {f.type === "select" ? (
+                {f.type === "display" ? (
+                  <div className="min-h-[2.5rem] rounded-md border border-input bg-background px-3 py-2 text-sm text-muted-foreground">
+                    {String(getValue(initial, f.source || f.name) ?? "—")}
+                  </div>
+                ) : f.type === "select" ? (
                   <select
                     {...register(f.name)}
                     className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ${isAutoFilled ? "pointer-events-none bg-muted" : ""}`}
@@ -197,19 +228,43 @@ export function EntityForm({ entity, open, onClose, initial, onSaved }: Props) {
                       ))
                     )}
                   </select>
-                ) : f.name === "GiayKhamSucKhoe" ? (
+                ) : f.type === "file" ? (
                   <div className="space-y-2">
-                    <Input placeholder="Dán link ảnh hoặc nhập tên file ảnh..." {...register(f.name)} />
-                    {watch("GiayKhamSucKhoe") && (
-                      <div className="mt-2 border rounded-md p-1 bg-muted/50">
-                        <img 
-                          src={String(watch("GiayKhamSucKhoe"))} 
-                          alt="Giấy khám sức khỏe" 
-                          className="max-h-40 mx-auto rounded"
-                          onError={(e) => (e.currentTarget.src = "https://placehold.co/400x200?text=Anh+Giay+Kham+Suc+Khoe")}
-                        />
-                      </div>
-                    )}
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = (e.target as HTMLInputElement).files?.[0];
+                        if (file) {
+                          const formData = new FormData();
+                          formData.append("file", file);
+                          try {
+                            const res = await api.post("/upload", formData);
+                            const url = res.data.url;
+                            setFileUrls((prev) => ({ ...prev, [f.name]: url }));
+                            setValue(f.name, url, { shouldDirty: true, shouldValidate: true });
+                          } catch (err) {
+                            console.error("Upload failed", err);
+                            toast.error("Không thể tải ảnh lên server");
+                          }
+                        }
+                      }}
+                    />
+                    <input type="hidden" {...register(f.name)} />
+                    {(() => {
+                      const watchValue = watch(f.name);
+                      const previewUrl = fileUrls[f.name] || (watchValue ? String(watchValue) : "");
+                      return previewUrl ? (
+                        <div className="mt-2 border rounded-md p-1 bg-muted/50">
+                          <img
+                            src={previewUrl}
+                            alt={f.label}
+                            className="max-h-40 mx-auto rounded"
+                            onError={(e) => (e.currentTarget.src = "https://placehold.co/400x200?text=Ảnh")}
+                          />
+                        </div>
+                      ) : null;
+                    })()}
                   </div>
                 ) : (
                   <Input 

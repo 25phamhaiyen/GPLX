@@ -2,21 +2,38 @@ import { z } from "zod";
 
 const optStr = z.string().optional().nullable();
 const optDate = z.coerce.date().optional().nullable();
-const optNum = z.preprocess((val) => (val === "" || (typeof val === "number" && isNaN(val)) ? null : val), z.coerce.number().optional().nullable());
-const reqNum = (label: string) => z.preprocess((val) => (val === "" || (typeof val === "number" && isNaN(val)) ? undefined : val), z.coerce.number({ invalid_type_error: `${label} phải là số`, required_error: `${label} là bắt buộc` }));
+const optNum = z.preprocess(
+  (val) => (val === "" || (typeof val === "number" && isNaN(val)) ? null : val),
+  z.coerce.number().optional().nullable(),
+);
+const reqNum = (label: string) =>
+  z.preprocess(
+    (val) =>
+      val === "" || (typeof val === "number" && isNaN(val)) ? undefined : val,
+    z.coerce.number({
+      invalid_type_error: `${label} phải là số`,
+      required_error: `${label} là bắt buộc`,
+    }),
+  );
 
 // ===== Học Viên =====
 const HocVienBase = z.object({
   TenDangNhap: z.string().min(1, "Tài khoản không được để trống"),
   MatKhau: z.string().min(1, "Mật khẩu không được để trống"),
   HoTen: z.string().min(1, "Họ tên không được để trống"),
-  NgaySinh: z.coerce.date().refine(d => {
+  NgaySinh: z.coerce.date().refine((d) => {
     const age = new Date().getFullYear() - d.getFullYear();
     return age >= 18;
   }, "Học viên phải từ 18 tuổi trở lên"),
   GioiTinh: z.enum(["Nam", "Nữ", "Khác"]).optional().nullable(),
-  CCCD: z.string().regex(/^\d{12}$/, "CCCD phải đúng 12 chữ số").optional().nullable(),
-  SoDienThoai: z.string().regex(/^0\d{9}$/, "Số điện thoại phải bắt đầu bằng 0 và có 10 chữ số"),
+  CCCD: z
+    .string()
+    .regex(/^\d{12}$/, "CCCD phải đúng 12 chữ số")
+    .optional()
+    .nullable(),
+  SoDienThoai: z
+    .string()
+    .regex(/^0\d{9}$/, "Số điện thoại phải bắt đầu bằng 0 và có 10 chữ số"),
   Email: z.string().email("Email không hợp lệ"),
   DiaChi: optStr,
 });
@@ -45,18 +62,27 @@ const KhoaHocBase = z.object({
   MaLoaiBang: reqNum("Mã loại bằng"),
   NgayBatDau: z.coerce.date(),
   NgayKetThuc: optDate,
-  SoLuongHocVienToiDa: reqNum("Số lượng tối đa").pipe(z.number().min(10).max(100)),
-  TrangThai: z.enum(["Sắp mở", "Đang mở", "Đang học", "Kết thúc", "Hủy"]).optional().nullable(),
+  SoLuongHocVienToiDa: reqNum("Số lượng tối đa").pipe(
+    z.number().min(10).max(100),
+  ),
+  TrangThai: z
+    .enum(["Sắp mở", "Đang mở", "Đang học", "Kết thúc", "Hủy"])
+    .optional()
+    .nullable(),
   GhiChu: optStr,
 });
-export const KhoaHocCreate = KhoaHocBase.refine(data => {
-  if (data.NgayKetThuc && data.NgayBatDau) return data.NgayKetThuc > data.NgayBatDau;
-  return true;
-}, { message: "Ngày kết thúc phải sau ngày bắt đầu", path: ["NgayKetThuc"] });
+export const KhoaHocCreate = KhoaHocBase.refine(
+  (data) => {
+    if (data.NgayKetThuc && data.NgayBatDau)
+      return data.NgayKetThuc > data.NgayBatDau;
+    return true;
+  },
+  { message: "Ngày kết thúc phải sau ngày bắt đầu", path: ["NgayKetThuc"] },
+);
 export const KhoaHocUpdate = KhoaHocBase.partial();
 
 // ===== Hồ Sơ Đăng Ký =====
-// Schema mới: bỏ DaThanhToan, LyDoTuChoi, ThoiGianHocDuKien; thêm TinhTrangSucKhoe, Anh3x4
+// Schema mới: bỏ DaThanhToan, LyDoTuChoi; thêm TinhTrangSucKhoe, Anh3x4
 const HoSoDangKyBase = z.object({
   MaHocVien: optNum,
   MaLoaiBang: reqNum("Loại bằng"),
@@ -66,11 +92,12 @@ const HoSoDangKyBase = z.object({
   GiayKhamSucKhoe: optStr,
   Anh3x4: optStr,
   ThoiGianThiDuKien: optDate,
-  TongHocPhi: optNum,
-  TrangThaiThanhToan: z.enum(["Chưa thanh toán", "Đã thanh toán"]).optional().nullable(),
-  NgayThanhToan: optDate,
-  TrangThaiHoSo: z.enum(["Chờ duyệt", "Đã duyệt", "Từ chối"]).optional().nullable(),
+  TrangThaiHoSo: z
+    .enum(["Chờ duyệt", "Đã duyệt", "Từ chối"])
+    .optional()
+    .nullable(),
   NgayDuyet: optDate,
+  LyDoTuChoi: optStr,
   GhiChu: optStr,
 });
 export const HoSoDangKyCreate = HoSoDangKyBase;
@@ -103,7 +130,11 @@ export const LichHocUpdate = LichHocBase.partial();
 // ===== Giảng Viên (bảng mới tách riêng) =====
 const GiangVienBase = z.object({
   HoTen: z.string().min(1),
-  SoDienThoai: z.string().regex(/^0\d{9}$/).optional().nullable(),
+  SoDienThoai: z
+    .string()
+    .regex(/^0\d{9}$/)
+    .optional()
+    .nullable(),
   Email: z.string().email().optional().nullable(),
   TrangThai: z.enum(["Hoạt động", "Nghỉ việc"]).optional().nullable(),
   GhiChu: optStr,
@@ -129,11 +160,21 @@ const ThongTinThiBase = z.object({
   MaLichThi: reqNum("Mã lịch thi"),
   DiemLyThuyet: z.preprocess(
     (val) => (val === "" || val === null || val === undefined ? null : val),
-    z.coerce.number().min(0, "Điểm không được âm").max(100, "Điểm tối đa 100").optional().nullable()
+    z.coerce
+      .number()
+      .min(0, "Điểm không được âm")
+      .max(100, "Điểm tối đa 100")
+      .optional()
+      .nullable(),
   ),
   DiemThucHanh: z.preprocess(
     (val) => (val === "" || val === null || val === undefined ? null : val),
-    z.coerce.number().min(0, "Điểm không được âm").max(100, "Điểm tối đa 100").optional().nullable()
+    z.coerce
+      .number()
+      .min(0, "Điểm không được âm")
+      .max(100, "Điểm tối đa 100")
+      .optional()
+      .nullable(),
   ),
   GhiChuLyThuyet: optStr,
   GhiChuThucHanh: optStr,
@@ -156,8 +197,12 @@ export const HoiDongSatHachUpdate = HoiDongSatHachBase.partial();
 // ===== Duyệt Cấp GPLX — bỏ MaHoiDong, NguoiDuyet vì DB mới không có =====
 const DuyetCapGPLXBase = z.object({
   MaThongTinThi: reqNum("Mã thông tin thi"),
+  MaHoiDong: reqNum("Mã hội đồng"),
   NgayDuyet: optDate,
-  TrangThaiDuyet: z.enum(["Chờ duyệt", "Đã duyệt", "Từ chối", "Cần bổ sung"]).optional().nullable(),
+  TrangThaiDuyet: z
+    .enum(["Chờ duyệt", "Đã duyệt", "Từ chối", "Cần bổ sung"])
+    .optional()
+    .nullable(),
   LyDoTuChoi: optStr,
   GhiChu: optStr,
 });
@@ -173,7 +218,10 @@ const GPLXBase = z.object({
   NgayCap: optDate,
   NgayHetHan: optDate,
   NoiCap: optStr,
-  TrangThai: z.enum(["Đang sử dụng", "Hết hạn", "Thu hồi", "Mất"]).optional().nullable(),
+  TrangThai: z
+    .enum(["Đang sử dụng", "Hết hạn", "Thu hồi", "Mất"])
+    .optional()
+    .nullable(),
   GhiChu: optStr,
 });
 export const GPLXCreate = GPLXBase;

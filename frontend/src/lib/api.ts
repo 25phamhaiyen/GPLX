@@ -2,7 +2,8 @@ import axios from "axios";
 import { toast } from "sonner";
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000/api",
+  baseURL:
+    (import.meta as any).env?.VITE_API_URL || "http://localhost:4000/api",
 });
 
 api.interceptors.request.use((config) => {
@@ -18,11 +19,11 @@ api.interceptors.response.use(
     if (err.response?.status === 401 && !err.config?.url?.includes("/auth/")) {
       localStorage.removeItem("token");
       window.location.href = "/login";
-    } else {
+    } else if (err.response?.status !== 403) {
       toast.error(msg);
     }
     return Promise.reject(err);
-  }
+  },
 );
 
 export interface PageResult<T> {

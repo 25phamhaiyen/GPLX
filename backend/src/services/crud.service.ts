@@ -40,6 +40,11 @@ export class CrudService {
       }));
     }
 
+    // Exclude admin users from hocvien list
+    if (this.opts.modelKey === "hocVien") {
+      where.TenDangNhap = { not: { contains: "admin" } };
+    }
+
     const [data, total] = await Promise.all([
       this.model.findMany({
         where,

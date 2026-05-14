@@ -16,6 +16,21 @@ export function buildCrudRouter(
   const WEEK_DAYS = [2, 3, 4, 5, 6, 7, 1];
   const toScheduleDay = (date: Date) =>
     date.getDay() === 0 ? 1 : date.getDay() + 1;
+
+  function getNextSoGPLX(existingNumbers: string[]) {
+    let maxIndex = 0;
+    existingNumbers.forEach((value) => {
+      const match = String(value).match(/(\d+)$/);
+      if (match) {
+        const sequence = Number(match[1]);
+        if (!Number.isNaN(sequence)) {
+          maxIndex = Math.max(maxIndex, sequence);
+        }
+      }
+    });
+    return `GPLX${String(maxIndex + 1).padStart(4, "0")}`;
+  }
+
   async function findFreeLecturerAndDay(startDate: Date) {
     const lecturers = await prisma.giangVien.findMany({
       where: { TrangThai: "Hoạt động" },
@@ -57,13 +72,48 @@ export function buildCrudRouter(
     asyncHandler(async (req, res) => {
       const filter: Record<string, any> = {};
       if (req.user && req.user.role === "HOCVIEN") {
-        // Automatically filter by current user if the model has MaHocVien
-        // We check modelKey to decide
-        const needsFilter = ["hoSoDangKy", "gPLX"].includes(
-          opts.modelKey as string,
-        );
-        if (needsFilter) {
+        // Automatically filter by student-related records
+        const modelKey = opts.modelKey as string;
+        if (["hoSoDangKy", "gPLX"].includes(modelKey)) {
           filter.MaHocVien = req.user.userId;
+        }
+        if (modelKey === "lichHoc") {
+          const hoSoRows = await prisma.hoSoDangKy.findMany({
+            where: { MaHocVien: req.user.userId },
+            select: { MaKhoaHoc: true },
+          });
+          const khoaHocIds = Array.from(
+            new Set(hoSoRows.map((h) => h.MaKhoaHoc)),
+          );
+          filter.MaKhoaHoc = { in: khoaHocIds };
+        }
+        if (modelKey === "khoaHoc") {
+          const hoSoRows = await prisma.hoSoDangKy.findMany({
+            where: { MaHocVien: req.user.userId },
+            select: { MaKhoaHoc: true },
+          });
+          const khoaHocIds = Array.from(
+            new Set(hoSoRows.map((h) => h.MaKhoaHoc)),
+          );
+          filter.MaKhoaHoc = { in: khoaHocIds };
+        }
+        if (modelKey === "lichThi") {
+          const hoSoRows = await prisma.hoSoDangKy.findMany({
+            where: { MaHocVien: req.user.userId },
+            select: { MaKhoaHoc: true },
+          });
+          const khoaHocIds = Array.from(
+            new Set(hoSoRows.map((h) => h.MaKhoaHoc)),
+          );
+          filter.MaKhoaHoc = { in: khoaHocIds };
+        }
+        if (modelKey === "thongTinThi") {
+          const hoSoRows = await prisma.hoSoDangKy.findMany({
+            where: { MaHocVien: req.user.userId },
+            select: { MaHoSo: true },
+          });
+          const hoSoIds = Array.from(new Set(hoSoRows.map((h) => h.MaHoSo)));
+          filter.MaHoSo = { in: hoSoIds };
         }
       }
 
@@ -90,6 +140,11 @@ export function buildCrudRouter(
     "/",
     validate(createSchema),
     asyncHandler(async (req, res) => {
+      // Set MaHocVien for HOCVIEN role
+      if (opts.modelKey === "hoSoDangKy" && req.user?.role === "HOCVIEN") {
+        req.body.MaHocVien = req.user.userId;
+      }
+
       // 1. PRE-CREATION AUTOMATIONS
 
       // Course (KhoaHoc) Logic: Calculate End Date & Session Count
@@ -272,6 +327,26 @@ export function buildCrudRouter(
         req.body.NgayNhapDiem = new Date();
       }
 
+      let duyetBeforeUpdate: any = null;
+      if (
+        opts.modelKey === "duyetCapGPLX" &&
+        req.body.TrangThaiDuyet === "Đã duyệt"
+      ) {
+        duyetBeforeUpdate = await prisma.duyetCapGPLX.findUnique({
+          where: { MaDuyet: Number(req.params.id) },
+          include: {
+            ThongTinThi: {
+              include: {
+                HoSoDangKy: {
+                  include: { LoaiBangLai: true },
+                },
+              },
+            },
+            GPLX: true,
+          },
+        });
+      }
+
       const result = await svc.update(String(req.params.id), req.body);
 
       // C. ThongTinThi: Auto-create DuyetCapGPLX if both scores pass
@@ -317,6 +392,45 @@ export function buildCrudRouter(
               });
             }
           }
+        }
+      }
+
+      // D. DuyetCapGPLX: Auto-create GPLX when record is approved
+      if (
+        opts.modelKey === "duyetCapGPLX" &&
+        req.body.TrangThaiDuyet === "Đã duyệt" &&
+        duyetBeforeUpdate
+      ) {
+        const duyetRecord = duyetBeforeUpdate;
+        if (duyetRecord.ThongTinThi && !duyetRecord.GPLX) {
+          const soGPLXRows = await prisma.gPLX.findMany({
+            select: { SoGPLX: true },
+          });
+          const nextSoGPLX = getNextSoGPLX(
+            soGPLXRows.map((row) => String(row.SoGPLX)),
+          );
+
+          const expiryYears =
+            duyetRecord.ThongTinThi.HoSoDangKy.LoaiBangLai.ThoiHanGPLX;
+          const ngayCap = new Date();
+          const ngayHetHan = new Date(ngayCap);
+          ngayHetHan.setFullYear(
+            ngayHetHan.getFullYear() + Number(expiryYears || 0),
+          );
+
+          await prisma.gPLX.create({
+            data: {
+              SoGPLX: nextSoGPLX,
+              MaHocVien: duyetRecord.ThongTinThi.HoSoDangKy.MaHocVien,
+              MaDuyet: duyetRecord.MaDuyet,
+              MaLoaiBang: duyetRecord.ThongTinThi.HoSoDangKy.MaLoaiBang,
+              NgayCap: ngayCap,
+              NgayHetHan: ngayHetHan,
+              NoiCap: "Sở Giao thông Vận tải",
+              TrangThai: "Đang sử dụng",
+              GhiChu: "GPLX tự động cấp khi xét duyệt",
+            },
+          });
         }
       }
 

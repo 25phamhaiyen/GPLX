@@ -13,7 +13,7 @@ model HoiDongSatHach {
   ChuTichHoiDong  String         @db.NVarChar(100)
   ThanhVien       String?        @db.NVarChar(500)
   NgayThanhLap    DateTime?      @db.Date
-  TrangThai       String?        @default("N'Hoạt động'", map: "DF__HoiDongSa__Trang__2A164134") @db.NVarChar(20)
+  TrangThai       String?        @default("Hoạt động", map: "DF__HoiDongSa__Trang__2A164134") @db.NVarChar(20)
   DuyetCapGPLX    DuyetCapGPLX[]
 }
 
@@ -23,7 +23,7 @@ model DuyetCapGPLX {
   MaHoiDong      Int
   NgayNop        DateTime        @default(now(), map: "DF__DuyetCapG__NgayN__14270015") @db.DateTime
   NgayDuyet      DateTime?       @db.DateTime
-  TrangThaiDuyet String          @default("N'Chờ duyệt'", map: "DF__DuyetCapG__Trang__151B244E") @db.NVarChar(30)
+  TrangThaiDuyet String          @default("Chờ duyệt", map: "DF__DuyetCapG__Trang__151B244E") @db.NVarChar(30)
   LyDoTuChoi     String?         @db.NVarChar(500)
   NguoiDuyet     String?         @db.NVarChar(100)
   GhiChu         String?         @db.NVarChar(500)
@@ -37,7 +37,7 @@ model GiangVien {
   HoTen             String              @db.NVarChar(100)
   SoDienThoai       String?             @db.VarChar(15)
   Email             String?             @unique(map: "UQ__GiangVie__A9D10534D98C467D") @db.NVarChar(100)
-  TrangThai         String?             @default("N'Hoạt động'", map: "DF__GiangVien__Trang__6477ECF3") @db.NVarChar(30)
+  TrangThai         String?             @default("Hoạt động", map: "DF__GiangVien__Trang__6477ECF3") @db.NVarChar(30)
   GhiChu            String?             @db.NVarChar(500)
   GiangVien_KhoaHoc GiangVien_KhoaHoc[]
 }
@@ -47,7 +47,7 @@ model GiangVien_KhoaHoc {
   MaKhoaHoc    Int
   GhiChu       String?   @db.NVarChar(500)
   NgayPhanCong DateTime? @default(now(), map: "DF__GiangVien__NgayP__71D1E811") @db.Date
-  TrangThai    String?   @default("N'Đang dạy'", map: "DF__GiangVien__Trang__72C60C4A") @db.NVarChar(20)
+  TrangThai    String?   @default("Đang dạy", map: "DF__GiangVien__Trang__72C60C4A") @db.NVarChar(20)
   GiangVien    GiangVien @relation(fields: [MaGiangVien], references: [MaGiangVien], onDelete: Cascade, map: "FK__GiangVien__MaGia__74AE54BC")
   KhoaHoc      KhoaHoc   @relation(fields: [MaKhoaHoc], references: [MaKhoaHoc], onDelete: Cascade, map: "FK__GiangVien__MaKho__75A278F5")
 
@@ -61,8 +61,8 @@ model GPLX {
   MaLoaiBang   Int
   NgayCap      DateTime     @default(dbgenerated("CONVERT([date],getdate())"), map: "DF__GPLX__NgayCap__1BC821DD") @db.Date
   NgayHetHan   DateTime     @db.Date
-  NoiCap       String       @default("N'Sở Giao thông Vận tải'", map: "DF__GPLX__NoiCap__1CBC4616") @db.NVarChar(200)
-  TrangThai    String?      @default("N'Đang sử dụng'", map: "DF__GPLX__TrangThai__1DB06A4F") @db.NVarChar(30)
+  NoiCap       String       @default("Sở Giao thông Vận tải", map: "DF__GPLX__NoiCap__1CBC4616") @db.NVarChar(200)
+  TrangThai    String?      @default("Đang sử dụng", map: "DF__GPLX__TrangThai__1DB06A4F") @db.NVarChar(30)
   GhiChu       String?      @db.NVarChar(500)
   DuyetCapGPLX DuyetCapGPLX @relation(fields: [MaDuyet], references: [MaDuyet], onUpdate: NoAction, map: "FK__GPLX__MaDuyet__208CD6FA")
   HocVien      HocVien      @relation(fields: [MaHocVien], references: [MaHocVien], map: "FK__GPLX__MaHocVien__1F98B2C1")
@@ -91,15 +91,15 @@ model HoSoDangKy {
   MaLoaiBang         Int
   MaKhoaHoc          Int
   NgayDangKy         DateTime?     @default(now(), map: "DF__HoSoDangK__NgayD__02084FDA") @db.DateTime
-  TinhTrangSucKhoe   String?       @default("N'Khỏe mạnh'", map: "DF__HoSoDangK__TinhT__02FC7413") @db.NVarChar(50)
+  TinhTrangSucKhoe   String?       @default("Khỏe mạnh", map: "DF__HoSoDangK__TinhT__02FC7413") @db.NVarChar(50)
   NgayKhamSucKhoe    DateTime?     @db.Date
   GiayKhamSucKhoe    String?       @db.VarChar(50)
   Anh3x4             String?       @db.NVarChar(255)
   ThoiGianThiDuKien  DateTime?     @db.Date
   TongHocPhi         Decimal?      @db.Decimal(15, 2)
-  TrangThaiThanhToan String?       @default("N'Chưa thanh toán'", map: "DF__HoSoDangK__Trang__04E4BC85") @db.NVarChar(30)
+  TrangThaiThanhToan String?       @default("Chưa thanh toán", map: "DF__HoSoDangK__Trang__04E4BC85") @db.NVarChar(30)
   NgayThanhToan      DateTime?     @db.DateTime
-  TrangThaiHoSo      String?       @default("N'Chờ duyệt'", map: "DF__HoSoDangK__Trang__06CD04F7") @db.NVarChar(30)
+  TrangThaiHoSo      String?       @default("Chờ duyệt", map: "DF__HoSoDangK__Trang__06CD04F7") @db.NVarChar(30)
   NgayDuyet          DateTime?     @db.DateTime
   GhiChu             String?       @db.NVarChar(500)
   HocVien            HocVien       @relation(fields: [MaHocVien], references: [MaHocVien], onUpdate: NoAction, map: "FK__HoSoDangK__MaHoc__08B54D69")
@@ -116,7 +116,7 @@ model KhoaHoc {
   NgayKetThuc         DateTime            @db.Date
   SoLuongHocVienToiDa Int
   SoLuongDaDangKy     Int                 @default(0, map: "DF__KhoaHoc__SoLuong__693CA210")
-  TrangThai           String              @default("N'Sắp mở'", map: "DF__KhoaHoc__TrangTh__6B24EA82") @db.NVarChar(20)
+  TrangThai           String              @default("Sắp mở", map: "DF__KhoaHoc__TrangTh__6B24EA82") @db.NVarChar(20)
   GhiChu              String?             @db.NVarChar(500)
   GiangVien_KhoaHoc   GiangVien_KhoaHoc[]
   HoSoDangKy          HoSoDangKy[]
@@ -159,7 +159,7 @@ model LoaiBangLai {
   DiemDatLyThuyet       Int
   DiemDatThucHanh       Int
   ThoiHanGPLX           Int          @default(10, map: "DF__LoaiBangL__ThoiH__5165187F")
-  TrangThai             String       @default("N'Hoạt động'", map: "DF__LoaiBangL__Trang__534D60F1") @db.NVarChar(20)
+  TrangThai             String       @default("Hoạt động", map: "DF__LoaiBangL__Trang__534D60F1") @db.NVarChar(20)
   GPLX                  GPLX[]
   HoSoDangKy            HoSoDangKy[]
   KhoaHoc               KhoaHoc[]

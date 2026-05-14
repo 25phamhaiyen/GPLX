@@ -62,6 +62,18 @@ export default function EntityListPage() {
     } catch { /* handled */ }
   };
 
+  const onEdit = async (row: Record<string, unknown>) => {
+    try {
+      const id = row[entity.idField];
+      const response = await api.get(`/${entity.key}/${id}`);
+      setEditing(response.data);
+      setOpen(true);
+    } catch (err) {
+      console.error("Không thể tải dữ liệu để sửa:", err);
+      toast.error("Không thể tải dữ liệu chi tiết");
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -111,10 +123,10 @@ export default function EntityListPage() {
                     <div className="flex justify-end gap-1">
                       {entity.key === "khoahoc" && (
                         <Button size="icon" variant="ghost" onClick={() => navigate(`/entities/lichhoc?search=${encodeURIComponent(row.TenKhoaHoc as string)}`)}>
-                          <Calendar className="h-4 w-4 text-blue-500" title="Xem lịch học" />
+                          <Calendar className="h-4 w-4 text-blue-500" aria-label="Xem lịch học" />
                         </Button>
                       )}
-                      <Button size="icon" variant="ghost" onClick={() => { setEditing(row); setOpen(true); }}>
+                      <Button size="icon" variant="ghost" onClick={() => onEdit(row)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button size="icon" variant="ghost" onClick={() => onDelete(row[entity.idField])}>

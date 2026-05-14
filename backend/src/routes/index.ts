@@ -17,7 +17,7 @@ router.use("/dashboard", dashboardRoutes);
 // LoaiBangLai
 router.use(
   "/loaibanglai",
-  checkRole(["ADMIN"]),
+  checkRole(["ADMIN", "HOCVIEN"]),
   buildCrudRouter(
     {
       modelKey: "loaiBangLai",
@@ -70,7 +70,12 @@ router.use(
   "/lichthi",
   checkRole(["ADMIN", "HOCVIEN", "GIAMTHI"]),
   buildCrudRouter(
-    { modelKey: "lichThi", idField: "MaLichThi", searchFields: ["DiaDiem"] },
+    {
+      modelKey: "lichThi",
+      idField: "MaLichThi",
+      searchFields: ["DiaDiem"],
+      include: { KhoaHoc: true },
+    },
     D.LichThiCreate,
     D.LichThiUpdate,
   ),
@@ -81,7 +86,16 @@ router.use(
   "/lichhoc",
   checkRole(["ADMIN", "HOCVIEN", "GIANGVIEN"]),
   buildCrudRouter(
-    { modelKey: "lichHoc", idField: "MaLichHoc", searchFields: [] },
+    {
+      modelKey: "lichHoc",
+      idField: "MaLichHoc",
+      searchFields: [],
+      include: {
+        KhoaHoc: {
+          include: { GiangVien_KhoaHoc: { include: { GiangVien: true } } },
+        },
+      },
+    },
     D.LichHocCreate,
     D.LichHocUpdate,
   ),
@@ -97,8 +111,10 @@ router.use(
       idField: "MaThongTinThi",
       searchFields: [],
       include: {
-        HoSoDangKy: { include: { HocVien: true, LoaiBangLai: true } },
-        LichThi: true,
+        HoSoDangKy: {
+          include: { HocVien: true, LoaiBangLai: true, KhoaHoc: true },
+        },
+        LichThi: { include: { KhoaHoc: true } },
       },
     },
     D.ThongTinThiCreate,
@@ -152,7 +168,7 @@ router.use(
 // HocVien management
 router.use(
   "/hocvien",
-  checkRole(["ADMIN"]),
+  checkRole(["ADMIN", "HOCVIEN"]),
   buildCrudRouter(
     {
       modelKey: "hocVien",
