@@ -197,7 +197,6 @@ export const HoiDongSatHachUpdate = HoiDongSatHachBase.partial();
 // ===== Duyệt Cấp GPLX — bỏ MaHoiDong, NguoiDuyet vì DB mới không có =====
 const DuyetCapGPLXBase = z.object({
   MaThongTinThi: reqNum("Mã thông tin thi"),
-  MaHoiDong: reqNum("Mã hội đồng"),
   NgayDuyet: optDate,
   TrangThaiDuyet: z
     .enum(["Chờ duyệt", "Đã duyệt", "Từ chối", "Cần bổ sung"])

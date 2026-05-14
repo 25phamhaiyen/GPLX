@@ -6,7 +6,6 @@ BEGIN TRAN;
 CREATE TABLE [dbo].[DuyetCapGPLX] (
     [MaDuyet] INT NOT NULL IDENTITY(1,1),
     [MaThongTinThi] INT NOT NULL,
-    [MaHoiDong] INT NOT NULL,
     [NgayNop] DATETIME NOT NULL CONSTRAINT [DF__DuyetCapG__NgayN__2EDAF651] DEFAULT CURRENT_TIMESTAMP,
     [NgayDuyet] DATETIME,
     [TrangThaiDuyet] NVARCHAR(30) NOT NULL CONSTRAINT [DF__DuyetCapG__Trang__2FCF1A8A] DEFAULT 'N''Chờ duyệt''',
@@ -67,16 +66,6 @@ CREATE TABLE [dbo].[HocVien] (
     CONSTRAINT [UQ__HocVien__A9D10534A17E1948] UNIQUE NONCLUSTERED ([Email])
 );
 
--- CreateTable
-CREATE TABLE [dbo].[HoiDongSatHach] (
-    [MaHoiDong] INT NOT NULL IDENTITY(1,1),
-    [TenHoiDong] NVARCHAR(200) NOT NULL,
-    [ChuTichHoiDong] NVARCHAR(100) NOT NULL,
-    [ThanhVien] NVARCHAR(500),
-    [NgayThanhLap] DATE,
-    [TrangThai] NVARCHAR(20) CONSTRAINT [DF__HoiDongSa__Trang__2A164134] DEFAULT 'N''Hoạt động''',
-    CONSTRAINT [PK__HoiDongS__998808B3893A869E] PRIMARY KEY CLUSTERED ([MaHoiDong])
-);
 
 -- CreateTable
 CREATE TABLE [dbo].[HoSoDangKy] (

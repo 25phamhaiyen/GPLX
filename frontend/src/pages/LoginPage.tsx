@@ -40,8 +40,8 @@ export default function LoginPage() {
           <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
             <GraduationCap className="h-6 w-6 text-primary" />
           </div>
-          <CardTitle className="text-2xl">GPLX Admin</CardTitle>
-          <p className="text-sm text-muted-foreground">Hệ thống quản lý đào tạo & cấp GPLX</p>
+          <CardTitle className="text-2xl">Đăng nhập hệ thống</CardTitle>
+          <p className="text-sm text-muted-foreground">Hệ thống quản lý đào tạo lái xe</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

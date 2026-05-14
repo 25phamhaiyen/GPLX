@@ -7,4 +7,12 @@ export default defineConfig({
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },
   },
+  server: {
+    proxy: {
+      "/uploads": {
+        target: "http://localhost:4000",
+        changeOrigin: true,
+      },
+    },
+  },
 });

@@ -45,7 +45,7 @@ export default function DashboardPage() {
     { label: "Khóa học", value: stats?.counts.khoaHoc ?? 0, icon: BookOpen, color: "text-emerald-500" },
     { label: "Hồ sơ đăng ký", value: stats?.counts.hoSo ?? 0, icon: FileText, color: "text-amber-500" },
     { label: "Kỳ thi", value: stats?.counts.kyThi ?? 0, icon: CalendarCheck, color: "text-violet-500" },
-    { label: "GPLX đã cấp", value: stats?.counts.gplx ?? 0, icon: GraduationCap, color: "text-rose-500" },
+    { label: "Giấy phép lái xe đã cấp", value: stats?.counts.gplx ?? 0, icon: GraduationCap, color: "text-rose-500" },
   ];
 
   return (
@@ -70,7 +70,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="lg:col-span-2">
-          <CardHeader><CardTitle>GPLX cấp theo tháng (12 tháng gần nhất)</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Giấy phép lái xe cấp theo tháng (12 tháng gần nhất)</CardTitle></CardHeader>
           <CardContent className="h-[320px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stats?.gplxByMonth || []}>
@@ -85,7 +85,7 @@ export default function DashboardPage() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>GPLX theo loại bằng</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Giấy phép lái xe theo loại bằng</CardTitle></CardHeader>
           <CardContent className="h-[320px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>

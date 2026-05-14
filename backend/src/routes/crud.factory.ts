@@ -87,16 +87,6 @@ export function buildCrudRouter(
           );
           filter.MaKhoaHoc = { in: khoaHocIds };
         }
-        if (modelKey === "khoaHoc") {
-          const hoSoRows = await prisma.hoSoDangKy.findMany({
-            where: { MaHocVien: req.user.userId },
-            select: { MaKhoaHoc: true },
-          });
-          const khoaHocIds = Array.from(
-            new Set(hoSoRows.map((h) => h.MaKhoaHoc)),
-          );
-          filter.MaKhoaHoc = { in: khoaHocIds };
-        }
         if (modelKey === "lichThi") {
           const hoSoRows = await prisma.hoSoDangKy.findMany({
             where: { MaHocVien: req.user.userId },
@@ -143,6 +133,24 @@ export function buildCrudRouter(
       // Set MaHocVien for HOCVIEN role
       if (opts.modelKey === "hoSoDangKy" && req.user?.role === "HOCVIEN") {
         req.body.MaHocVien = req.user.userId;
+      }
+
+      if (
+        opts.modelKey === "hoSoDangKy" &&
+        req.body.MaHocVien &&
+        req.body.MaLoaiBang
+      ) {
+        const existingGPLX = await prisma.gPLX.findFirst({
+          where: {
+            MaHocVien: Number(req.body.MaHocVien),
+            MaLoaiBang: Number(req.body.MaLoaiBang),
+          },
+        });
+        if (existingGPLX) {
+          return res.status(400).json({
+            message: "Bạn đã có GPLX loại này, không thể đăng ký lại.",
+          });
+        }
       }
 
       // 1. PRE-CREATION AUTOMATIONS
@@ -376,16 +384,9 @@ export function buildCrudRouter(
             });
             if (!existingDuyet) {
               // Get default HoiDong (first active one)
-              const hoiDong = await prisma.hoiDongSatHach.findFirst({
-                where: { TrangThai: "Hoạt động" },
-              });
-              if (!hoiDong) {
-                throw new Error("Không tìm thấy hội đồng sát hạch hoạt động");
-              }
               await prisma.duyetCapGPLX.create({
                 data: {
                   MaThongTinThi: updatedThi.MaThongTinThi,
-                  MaHoiDong: hoiDong.MaHoiDong,
                   NgayNop: new Date(),
                   TrangThaiDuyet: "Chờ duyệt",
                 },

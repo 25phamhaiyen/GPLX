@@ -7,27 +7,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model HoiDongSatHach {
-  MaHoiDong       Int            @id(map: "PK__HoiDongS__998808B3893A869E") @default(autoincrement())
-  TenHoiDong      String         @db.NVarChar(200)
-  ChuTichHoiDong  String         @db.NVarChar(100)
-  ThanhVien       String?        @db.NVarChar(500)
-  NgayThanhLap    DateTime?      @db.Date
-  TrangThai       String?        @default("Hoạt động", map: "DF__HoiDongSa__Trang__2A164134") @db.NVarChar(20)
-  DuyetCapGPLX    DuyetCapGPLX[]
-}
 
 model DuyetCapGPLX {
   MaDuyet        Int             @id(map: "PK__DuyetCap__34A9E4894E3E030B") @default(autoincrement())
   MaThongTinThi  Int             @unique(map: "UQ__DuyetCap__071809421423BEE2")
-  MaHoiDong      Int
   NgayNop        DateTime        @default(now(), map: "DF__DuyetCapG__NgayN__14270015") @db.DateTime
   NgayDuyet      DateTime?       @db.DateTime
   TrangThaiDuyet String          @default("Chờ duyệt", map: "DF__DuyetCapG__Trang__151B244E") @db.NVarChar(30)
   LyDoTuChoi     String?         @db.NVarChar(500)
-  NguoiDuyet     String?         @db.NVarChar(100)
   GhiChu         String?         @db.NVarChar(500)
-  HoiDongSatHach HoiDongSatHach  @relation(fields: [MaHoiDong], references: [MaHoiDong], map: "FK__DuyetCapG__MaHoi__32AB8735")
   ThongTinThi    ThongTinThi     @relation(fields: [MaThongTinThi], references: [MaThongTinThi], map: "FK__DuyetCapG__MaTho__17036CC0")
   GPLX           GPLX?
 }
@@ -93,8 +81,8 @@ model HoSoDangKy {
   NgayDangKy         DateTime?     @default(now(), map: "DF__HoSoDangK__NgayD__02084FDA") @db.DateTime
   TinhTrangSucKhoe   String?       @default("Khỏe mạnh", map: "DF__HoSoDangK__TinhT__02FC7413") @db.NVarChar(50)
   NgayKhamSucKhoe    DateTime?     @db.Date
-  GiayKhamSucKhoe    String?       @db.VarChar(50)
-  Anh3x4             String?       @db.NVarChar(255)
+  GiayKhamSucKhoe    String?       @db.NVarChar(500)
+  Anh3x4             String?       @db.NVarChar(500)
   ThoiGianThiDuKien  DateTime?     @db.Date
   TongHocPhi         Decimal?      @db.Decimal(15, 2)
   TrangThaiThanhToan String?       @default("Chưa thanh toán", map: "DF__HoSoDangK__Trang__04E4BC85") @db.NVarChar(30)

@@ -52,7 +52,7 @@ export default function RegisterPage() {
             <GraduationCap className="h-6 w-6 text-primary" />
           </div>
           <CardTitle className="text-2xl">Đăng ký tài khoản</CardTitle>
-          <CardDescription>Trở thành học viên của trung tâm đào tạo GPLX</CardDescription>
+          <CardDescription>Trở thành học viên của trung tâm đào tạo lái xe</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
