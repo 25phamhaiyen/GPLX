@@ -30,7 +30,7 @@ export default function AdminLayout() {
           <GraduationCap className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <p className="font-semibold leading-none">GPLX Admin</p>
+          <p className="font-semibold leading-none">GPLX</p>
           <p className="text-xs text-muted-foreground mt-0.5">Quản lý đào tạo</p>
         </div>
       </div>
